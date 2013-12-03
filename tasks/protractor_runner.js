@@ -10,6 +10,7 @@
 
 var util = require('util');
 var path = require('path');
+var _ = require('lodash');
 var async = require('async');
 
 module.exports = function(grunt) {
@@ -34,6 +35,8 @@ module.exports = function(grunt) {
     // read the config file, so we can parse the capabilities
     // option as array or object
     var readConf = require(path.relative(__dirname, opts.configFile));
+
+    opts.args = _.merge(opts.args, readConf.config);
     
     // flag for many tests
     var many = false;
@@ -63,13 +66,22 @@ module.exports = function(grunt) {
 
     grunt.verbose.writeln("Options: " + util.inspect(opts));
 
+    // these all could be present in the 
+    // grunt.options object
+    // with the exception of: 
+    // - configFile, which can be left blank
+    // - keepAlive, which is at root level for some reason? 
+    //
+    // in general the use of options AND options.args is confusing
+    // and I don't understand the need for it. 
+    //
     var keepAlive = opts['keepAlive'];
     var strArgs = ["seleniumAddress", "seleniumServerJar", "seleniumPort", "baseUrl", "rootElement", "browser","chromeDriver","chromeOnly"];
     var listArgs = ["specs"];
     var boolArgs = ["includeStackTrace", "verbose"];
 
     // @note this is broken unless protractor is install locally.? 
-    var args = ['./node_modules/protractor/bin/protractor', opts.configFile];
+    var args = ['./node_modules/protractor/bin/protractor'];
     if (opts.noColor){
       args.push('--no-jasmineNodeOpts.showColors');
     }
