@@ -67,6 +67,15 @@ module.exports = function(grunt) {
     // set length based on number of browsers
     howMany = browserList.length;
 
+    // async function to call when grunt command is done
+    var done = this.async();
+
+    // create async queue
+    // with a limit of 1, this allows us to 
+    var q = async.queue(function (task, callback) {
+        
+        grunt.log.oklns('starting test #' + task.number);
+
     // @todo parse entire config file as params, 
     // because we'll need to adjust browser for each test to make
     // this setup work. Currently we just pass a filename for conf
@@ -155,14 +164,7 @@ module.exports = function(grunt) {
 
     grunt.verbose.writeln("Spwan node with arguments: " + args.join(" "));
 
-    // async function to call when grunt command is done
-    var done = this.async();
-
-    // create async queue
-    // with a limit of 1, this allows us to 
-    var q = async.queue(function (task, callback) {
-        
-        grunt.log.oklns('starting test #' + task.number);
+    
 
         // spawn grunt task 
         grunt.util.spawn({
