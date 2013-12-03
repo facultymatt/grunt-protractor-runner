@@ -39,7 +39,7 @@ module.exports = function(grunt) {
     // merge parsed config file into our options
     // @todo check order against protractor to keep consistent
     // protractor priority (between config and params) should go second
-    opts.args = _.merge(opts.args, readConf.config);
+    opts.args = _.merge(readConf.config, opts.args);
 
     // @todo spec urls are broken! 
     // opts.args.specs.forEach(function(spec, key) {
