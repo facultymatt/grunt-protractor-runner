@@ -9,6 +9,7 @@
 'use strict';
 
 var util = require('util');
+var path = require('path');
 var async = require('async');
 
 module.exports = function(grunt) {
@@ -16,12 +17,13 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('protractor', 'A grunt task to run protractor.', function() {
     // Merge task-specific and/or target-specific options with these defaults.
     var opts = this.options({
+      // @note this requires protractor is installed locally
+      // which is not in current readme
       configFile: 'node_modules/protractor/referenceConf.js',
       keepAlive: true,
       noColor: false,
       debug: false,
-      args: {},
-      many: false
+      args: {}
     });
 
     // configFile is a special property which need not to be in options{} object.
@@ -29,17 +31,42 @@ module.exports = function(grunt) {
       opts.configFile = this.data.configFile;
     }
 
+    // read the config file, so we can parse the capabilities
+    // option as array or object
+    var readConf = require(path.relative(__dirname, opts.configFile));
+    
+    // flag for many tests
+    var many = false;
+    var howMany = 0;
+    var browserList = [];
+
+    // check if capabilities is an object / array
+    // in which case first array key will be object
+    if(typeof readConf.config.capabilities[0] === 'object') {
+      browserList = readConf.config.capabilities;
+    } else {
+      browserList[0] = readConf.config.capabilities;
+    }
+
+    // set length based on number of browsers
+    howMany = browserList.length;
+
+    // @todo parse entire config file as params, 
+    // because we'll need to adjust browser for each test to make
+    // this setup work. Currently we just pass a filename for conf
+    // and that relies on protractor to process many tests, which wont work
+    // we need to run protract many times from our end. 
+    // - read conf
+    // - for each capability, create full set of params. But over-ride the
+    //   capability with the browser using capabilities[key]
+    // - spawn grunt 
+
     grunt.verbose.writeln("Options: " + util.inspect(opts));
 
     var keepAlive = opts['keepAlive'];
     var strArgs = ["seleniumAddress", "seleniumServerJar", "seleniumPort", "baseUrl", "rootElement", "browser","chromeDriver","chromeOnly"];
     var listArgs = ["specs"];
     var boolArgs = ["includeStackTrace", "verbose"];
-    
-    // is this a many browser test? 
-    // @todo parse actual config, looking for array of capabilities
-    // instead of checking boolean
-    var many = opts["many"];
 
     // @note this is broken unless protractor is install locally.? 
     var args = ['./node_modules/protractor/bin/protractor', opts.configFile];
