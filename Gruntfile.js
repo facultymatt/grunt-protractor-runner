@@ -45,6 +45,15 @@ module.exports = function(grunt) {
           }
         }
       },
+      testManyInstances: {
+        configFile:"test/testConf.js",
+        options: {
+          many: true,
+          args: {
+            specs:["test/manyInstances.js"],
+          }
+        }
+      },
       testArgs: {
         configFile:"test/testConf.js",
         options: {
