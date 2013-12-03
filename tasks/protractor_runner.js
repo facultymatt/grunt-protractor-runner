@@ -99,79 +99,79 @@ module.exports = function(grunt) {
     // async function to call when grunt command is done
     var done = this.async();
 
-    // array to hold our tests
-    var allTests = [];
+    // create async queue
+    // with a limit of 1, this allows us to 
+    var q = async.queue(function (task, callback) {
+        
+        grunt.log.oklns('starting test #' + task.number);
 
-    // function that will run our test
-    // given single set of arguments from grunt task config
-    var runOne = function(callback) {
-      grunt.util.spawn({
-          cmd: 'node',
-          args: args,
-          opts: {
-            stdio:'inherit'
+        // spawn grunt task 
+        grunt.util.spawn({
+            cmd: 'node',
+            args: args,
+            opts: {
+              stdio:'inherit'
+            }
+          },
+          // callback on spawn task completion
+          // accepts three params
+          // @see http://gruntjs.com/api/grunt.util#grunt.util.spawn
+          // @note we call `callback` instead of done because we 
+          // want to trigger the next queued task. Calling done would 
+          // complete our grunt task and prevent our other queued tasks
+          // from running. 
+          function(error, result, code) {
+            
+            if (error) {
+              grunt.log.error(String(result));
+              if(code === 1 && keepAlive) {
+                // Test fails but do not want to stop the grunt process.
+                grunt.log.oklns("Test failed but keep the grunt process alive.");
+                //done();
+                //done = null;
+                callback();
+              } else {
+                // Test fails and want to stop the grunt process,
+                // or protractor exited with other reason.
+                grunt.fail.fatal('protractor exited with code: '+code, 3);
+              }
+            } else {
+              //done();
+              //done = null;
+              callback();
+            }
+            
           }
-        },
-        // callback on spawn task completion
-        // accepts three params
-        // @see http://gruntjs.com/api/grunt.util#grunt.util.spawn 
-        function(error, result, code) {
-          console.log('test is done');
-          callback(null, 'one');
-        }
-      );
+        );
 
-    };
+    }, 1);
 
-    // mock data
-    // @todo return actual results from grunt spawns
-    var data = {
-      error: false,
-      result: false,
-      code: 0
-    };
-
-    // done function is called when async series is done
-    // @todo parse actual data from all calls
-    var doneFn = function(err, theData) {
-      
-      var error = data.error; 
-      var result = data.result; 
-      var code = data.code;
-
-      if (error) {
-        grunt.log.error(String(result));
-        if(code === 1 && keepAlive) {
-          // Test fails but do not want to stop the grunt process.
-          grunt.log.oklns("Test failed but keep the grunt process alive.");
-          done();
-          done = null;
-        } else {
-          // Test fails and want to stop the grunt process,
-          // or protractor exited with other reason.
-          grunt.fail.fatal('protractor exited with code: '+code, 3);
-        }
-      } else {
+    // assign a callback when queue is drained
+    // this will be called when each grunt task is complete
+    // if a grunt task spawns many tests, this will be called when
+    // all tests are complete.  
+    q.drain = function() {
+        grunt.log.oklns('All tests for this task have been processed');
         done();
-        done = null;
-      }
+    };
 
+    // called when function is done being added to queue. 
+    // @todo not really needed, delete this
+    var doneProcessing = function (err) {
+        grunt.log.oklns('Processed grunt task');
     };
 
     // mock many tests
     // @todo get from browser spec
     if(!many) {
-      allTests.push(runOne);
+      //allTests.push(runOne);
+      q.push({number: null}, doneProcessing);
     } else {
       for (var i = 0; i < 3; i++) {
-        allTests.push(runOne);
+        //allTests.push(runOne);
+        q.push({number: i}, doneProcessing);
       }
     }
-
-    // run all tests in aysnc series. 
-    // @todo support parallel, although this brings up challenges
-    // around logging results
-    async.series(allTests, doneFn);
 
   });
 
