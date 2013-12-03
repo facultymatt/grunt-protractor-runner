@@ -54,6 +54,9 @@ exports.config = {
     'browserName': 'firefox'
   }],
 
+  // note we can do this to run one browser
+  // browser: 'chrome',
+
   // A base URL for your application under test. Calls to protractor.get()
   // with relative paths will be prepended with this.
   baseUrl: 'http://localhost:8000',
