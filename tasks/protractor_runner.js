@@ -36,7 +36,15 @@ module.exports = function(grunt) {
     // option as array or object
     var readConf = require(path.relative(__dirname, opts.configFile));
 
+    // merge parsed config file into our options
+    // @todo check order against protractor to keep consistent
+    // protractor priority (between config and params) should go second
     opts.args = _.merge(opts.args, readConf.config);
+
+    // @todo spec urls are broken! 
+    // opts.args.specs.forEach(function(spec, key) {
+    //   opts.args.specs[key] = path.relative(process.cwd(), spec);
+    // });
     
     // flag for many tests
     var many = false;
@@ -45,10 +53,15 @@ module.exports = function(grunt) {
 
     // check if capabilities is an object / array
     // in which case first array key will be object
-    if(typeof readConf.config.capabilities[0] === 'object') {
-      browserList = readConf.config.capabilities;
-    } else {
-      browserList[0] = readConf.config.capabilities;
+    // we delete opts.args.capabilities because we don't want to pass them
+    // into our params parser. If no capabilities are specified we
+    // assume user is trying to use "browser" param instead of capabilities
+    if(opts.args.capabilities && typeof opts.args.capabilities[0] === 'object') {
+      browserList = opts.args.capabilities;
+      delete opts.args.capabilities;
+    } else if(opts.args.capabilities) {
+      browserList[0] = opts.args.capabilities;
+      delete opts.args.capabilities;
     }
 
     // set length based on number of browsers
@@ -63,6 +76,13 @@ module.exports = function(grunt) {
     // - for each capability, create full set of params. But over-ride the
     //   capability with the browser using capabilities[key]
     // - spawn grunt 
+
+    // this is the browser object as sauceLabs expects it
+    var capability = {
+      browser: null,
+      platform: null,
+      version: null
+    };
 
     grunt.verbose.writeln("Options: " + util.inspect(opts));
 
