@@ -74,7 +74,8 @@ module.exports = function(grunt) {
     // with a limit of 1, this allows us to 
     var q = async.queue(function(task, callback) {
 
-      grunt.log.oklns('starting test #' + task.number);
+      grunt.log.oklns('starting test #' + (task.number + 1));
+      console.log(task.capability);
 
       // @todo parse entire config file as params, 
       // because we'll need to adjust browser for each test to make
@@ -84,14 +85,8 @@ module.exports = function(grunt) {
       // - read conf
       // - for each capability, create full set of params. But over-ride the
       //   capability with the browser using capabilities[key]
-      // - spawn grunt 
+      // - spawn grunt
 
-      // this is the browser object as sauceLabs expects it
-      var capability = {
-        browser: null,
-        platform: null,
-        version: null
-      };
 
       grunt.verbose.writeln("Options: " + util.inspect(opts));
 
@@ -109,8 +104,29 @@ module.exports = function(grunt) {
       var listArgs = ["specs"];
       var boolArgs = ["includeStackTrace", "verbose"];
 
+      // this is the browser object as sauceLabs expects it
+      var capability = {
+        browser: null,
+        platform: null,
+        version: null
+      };
+
+      var capabilityArgs = ["browser", "browserName", "platform", "version"];
+
       // @note this is broken unless protractor is install locally.? 
       var args = ['./node_modules/protractor/bin/protractor'];
+
+      // crude but working implementation of building browser 
+      // config on per task basis
+      if (task.capability) {
+        opts.args.capabilities = {};
+        capabilityArgs.forEach(function(cap) {
+          if (task.capability[cap]) {
+            args.push('--capabilities.' + cap, task.capability[cap]);
+          }
+        });
+      }
+
       if (opts.noColor) {
         args.push('--no-jasmineNodeOpts.showColors');
       }
@@ -162,9 +178,9 @@ module.exports = function(grunt) {
         }
       })("--params", opts.args.params, args); // initial arguments
 
+      console.log(args.join(" "));
+
       grunt.verbose.writeln("Spwan node with arguments: " + args.join(" "));
-
-
 
       // spawn grunt task 
       grunt.util.spawn({
@@ -225,18 +241,18 @@ module.exports = function(grunt) {
 
     // mock many tests
     // @todo get from browser spec
-    if (!many) {
+    if (browserList) {
       //allTests.push(runOne);
+      browserList.forEach(function(browser, key) {
+        q.push({
+          number: key,
+          capability: browser
+        }, doneProcessing);
+      });
+    } else {
       q.push({
         number: null
       }, doneProcessing);
-    } else {
-      for (var i = 0; i < 3; i++) {
-        //allTests.push(runOne);
-        q.push({
-          number: i
-        }, doneProcessing);
-      }
     }
 
   });
