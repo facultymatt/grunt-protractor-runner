@@ -37,8 +37,9 @@ exports.config = {
   // ----- What tests to run -----
   //
   // Spec patterns are relative to the location of this config.
+  // @note paths must be relative to project root
   specs: [
-    'blankTest.js',
+    'test/blankTest.js',
   ],
 
   // ----- Capabilities to be passed to the webdriver instance ----

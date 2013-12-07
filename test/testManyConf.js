@@ -38,7 +38,7 @@ exports.config = {
   //
   // Spec patterns are relative to the location of this config.
   specs: [
-    'blankTest.js',
+    'test/blankTest.js',
   ],
 
   // ----- Capabilities to be passed to the webdriver instance ----
@@ -52,6 +52,9 @@ exports.config = {
   },
   {
     'browserName': 'firefox'
+  },
+  {
+    'browserName': 'safari'
   }],
 
   // note we can do this to run one browser
