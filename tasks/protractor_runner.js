@@ -74,8 +74,7 @@ module.exports = function(grunt) {
     // with a limit of 1, this allows us to 
     var q = async.queue(function(task, callback) {
 
-      grunt.log.oklns('starting test #' + (task.number + 1));
-      console.log(task.capability);
+      grunt.verbose.writeln('starting test #' + (task.number + 1));
 
       // @todo parse entire config file as params, 
       // because we'll need to adjust browser for each test to make
@@ -178,8 +177,6 @@ module.exports = function(grunt) {
         }
       })("--params", opts.args.params, args); // initial arguments
 
-      console.log(args.join(" "));
-
       grunt.verbose.writeln("Spwan node with arguments: " + args.join(" "));
 
       // spawn grunt task 
@@ -229,14 +226,14 @@ module.exports = function(grunt) {
     // if a grunt task spawns many tests, this will be called when
     // all tests are complete.  
     q.drain = function() {
-      grunt.log.oklns('All tests for this task have been processed');
+      grunt.verbose.writeln('All tests for this task have been processed');
       done();
     };
 
     // called when function is done being added to queue. 
     // @todo not really needed, delete this
     var doneProcessing = function(err) {
-      grunt.log.oklns('Processed grunt task');
+      grunt.verbose.writeln('Processed grunt task');
     };
 
     // mock many tests
