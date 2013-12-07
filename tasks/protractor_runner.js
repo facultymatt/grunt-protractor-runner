@@ -112,8 +112,12 @@ module.exports = function(grunt) {
 
       var capabilityArgs = ["browser", "browserName", "platform", "version"];
 
-      // @note this is broken unless protractor is install locally.? 
-      var args = ['./node_modules/protractor/bin/protractor'];
+      // '.../node_modules/protractor/lib/protractor.js'
+      var protractorMainPath = require.resolve('protractor');
+      // '.../node_modules/protractor/bin/protractor'
+      var protractorBinPath = path.resolve(protractorMainPath, '../../bin/protractor');
+
+      var args = [protractorBinPath];
 
       // crude but working implementation of building browser 
       // config on per task basis

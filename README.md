@@ -90,6 +90,8 @@ Supported arguments are below.
 * params `object`: Param object to be passed to the test as browser.params
 * chromeDriver `string`: Location of chrome driver overridng the property in config file
 * chromeOnly `boolean`: Bypass Selenium for Chrome only testing
+* sauceUser `string`: Username for a SauceLabs account
+* sauceKey `string`: Access Key for a SauceLabs account
 
 ## Tests
 
@@ -110,6 +112,7 @@ In lieu of a formal styleguide, take care to maintain the existing coding style.
 
 ## Release History
 
+* 0.1.11 - Support SauceLabs account config in options.args
 * 0.1.10
   * Support --chromeOnly in options.args (#23)
   * Support options.noColor to turn color off in protractor output (#24)
