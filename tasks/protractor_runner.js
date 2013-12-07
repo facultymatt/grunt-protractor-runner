@@ -74,49 +74,21 @@ module.exports = function(grunt) {
     // with a limit of 1, this allows us to 
     var q = async.queue(function(task, callback) {
 
-      grunt.verbose.writeln('starting test #' + (task.number + 1));
-
-      // @todo parse entire config file as params, 
-      // because we'll need to adjust browser for each test to make
-      // this setup work. Currently we just pass a filename for conf
-      // and that relies on protractor to process many tests, which wont work
-      // we need to run protract many times from our end. 
-      // - read conf
-      // - for each capability, create full set of params. But over-ride the
-      //   capability with the browser using capabilities[key]
-      // - spawn grunt
-
-
       grunt.verbose.writeln("Options: " + util.inspect(opts));
 
-      // these all could be present in the 
-      // grunt.options object
-      // with the exception of: 
-      // - configFile, which can be left blank
-      // - keepAlive, which is at root level for some reason? 
-      //
-      // in general the use of options AND options.args is confusing
-      // and I don't understand the need for it. 
-      //
       var keepAlive = opts['keepAlive'];
       var strArgs = ["seleniumAddress", "seleniumServerJar", "seleniumPort", "baseUrl", "rootElement", "browser", "chromeDriver", "chromeOnly", "sauceUser", "sauceKey"];
       var listArgs = ["specs"];
       var boolArgs = ["includeStackTrace", "verbose"];
 
-      // this is the browser object as sauceLabs expects it
-      var capability = {
-        browser: null,
-        platform: null,
-        version: null
-      };
-
+      // elements of browser config as sauce labs would expect it
       var capabilityArgs = ["browser", "browserName", "platform", "version"];
 
-      // '.../node_modules/protractor/lib/protractor.js'
+      // get path to global or local protractor install
       var protractorMainPath = require.resolve('protractor');
-      // '.../node_modules/protractor/bin/protractor'
       var protractorBinPath = path.resolve(protractorMainPath, '../../bin/protractor');
 
+      // set path to protractor, @note we no longer pass `configFile` 
       var args = [protractorBinPath];
 
       // crude but working implementation of building browser 
@@ -183,6 +155,12 @@ module.exports = function(grunt) {
 
       grunt.verbose.writeln("Spwan node with arguments: " + args.join(" "));
 
+      // provide details on each test if running multiple browser config
+      if(task.capability && howMany > 1) {
+        grunt.log.oklns('starting test #' + (task.number + 1) + ' of ' + howMany);
+        grunt.log.oklns('browser' + JSON.stringify(task.capability));
+      }
+      
       // spawn grunt task 
       grunt.util.spawn({
           cmd: 'node',
@@ -198,7 +176,6 @@ module.exports = function(grunt) {
         // want to trigger the next queued task. Calling done would 
         // complete our grunt task and prevent our other queued tasks
         // from running. 
-
         function(error, result, code) {
 
           if (error) {
@@ -223,10 +200,9 @@ module.exports = function(grunt) {
         }
       );
 
-    }, 1);
+    }, 1); // @note this is how many tests get run at one time
 
     // assign a callback when queue is drained
-    // this will be called when each grunt task is complete
     // if a grunt task spawns many tests, this will be called when
     // all tests are complete.  
     q.drain = function() {
@@ -235,15 +211,13 @@ module.exports = function(grunt) {
     };
 
     // called when function is done being added to queue. 
-    // @todo not really needed, delete this
+    // @note this isn't needed for functionality just here for example
     var doneProcessing = function(err) {
       grunt.verbose.writeln('Processed grunt task');
     };
 
-    // mock many tests
-    // @todo get from browser spec
+    // push many tests of one depending on config
     if (browserList) {
-      //allTests.push(runOne);
       browserList.forEach(function(browser, key) {
         q.push({
           number: key,
