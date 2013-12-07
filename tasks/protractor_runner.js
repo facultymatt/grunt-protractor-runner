@@ -100,7 +100,7 @@ module.exports = function(grunt) {
       // and I don't understand the need for it. 
       //
       var keepAlive = opts['keepAlive'];
-      var strArgs = ["seleniumAddress", "seleniumServerJar", "seleniumPort", "baseUrl", "rootElement", "browser", "chromeDriver", "chromeOnly"];
+      var strArgs = ["seleniumAddress", "seleniumServerJar", "seleniumPort", "baseUrl", "rootElement", "browser", "chromeDriver", "chromeOnly", "sauceUser", "sauceKey"];
       var listArgs = ["specs"];
       var boolArgs = ["includeStackTrace", "verbose"];
 
@@ -136,7 +136,7 @@ module.exports = function(grunt) {
 
       // Iterate over all supported arguments.
       strArgs.forEach(function(a) {
-        if (a in opts.args || grunt.option(a)) {
+        if ((a in opts.args || grunt.option(a)) && opts.args[a] !== null) {
           args.push('--' + a, grunt.option(a) || opts.args[a]);
         }
       });
